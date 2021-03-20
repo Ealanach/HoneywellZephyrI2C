@@ -33,22 +33,20 @@
  *
  */
 
+/// An enumerator to define the type of HAF sensor
+enum SensorType : uint8_t {
+    SCCM = 0, ///< sensor reports values in SCCM
+    SLPM = 1 ///< sensor reports values in SLPM
+};
+
 /**************************************************************************/
 /*! 
     @brief  Class for reading flow rate from a Honeywell Zephyr HAF sensor
 */
 /**************************************************************************/
-    enum SensorType : uint8_t {
-        SCCM = 0, ///< sensor reports values in SCCM
-        SLPM = 1 ///< sensor reports values in SLPM
-    };
 
 class ZephyrFlowRateSensor
 {
-  public:
-    /// An enumerator to define the type of HAF sensor
-    uint32_t SerialNo;	   ///< Sensor serial number	
-
   private:
     const uint8_t _ADDR;      ///< slave select pin (active low)
     const float _FLOW_RANGE;  ///< sensor flow rate range
@@ -57,6 +55,7 @@ class ZephyrFlowRateSensor
     SensorType _type;         ///< the sensor type is used to select the algorithm to convert counts to flow rate
 
   public:  
+    uint32_t SerialNo;	   ///< Sensor serial number	
     /**************************************************************************/
     /*!
     @brief  Constructs a new flow rate sensor object.
