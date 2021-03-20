@@ -40,13 +40,6 @@
 /**************************************************************************/
 class ZephyrFlowRateSensor
 {
-  private:
-    const uint8_t _ADDR;      ///< slave select pin (active low)
-    const float _FLOW_RANGE;  ///< sensor flow rate range
-    uint8_t _buf[2];          ///< buffer to hold sensor data
-    int _count = 0;           ///< hold raw flow rate data (14- bits, 0 - 16384)
-    SensorType _type;         ///< the sensor type is used to select the algorithm to convert counts to flow rate
-
   public:
     /// An enumerator to define the type of HAF sensor
     uint32_t SerialNo;	   ///< Sensor serial number	
@@ -54,6 +47,15 @@ class ZephyrFlowRateSensor
         SCCM = 0, ///< sensor reports values in SCCM
         SLPM = 1 ///< sensor reports values in SLPM
     };
+
+  private:
+    const uint8_t _ADDR;      ///< slave select pin (active low)
+    const float _FLOW_RANGE;  ///< sensor flow rate range
+    uint8_t _buf[2];          ///< buffer to hold sensor data
+    int _count = 0;           ///< hold raw flow rate data (14- bits, 0 - 16384)
+    SensorType _type;         ///< the sensor type is used to select the algorithm to convert counts to flow rate
+
+  public:  
     /**************************************************************************/
     /*!
     @brief  Constructs a new flow rate sensor object.
