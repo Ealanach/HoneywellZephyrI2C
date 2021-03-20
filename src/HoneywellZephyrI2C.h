@@ -40,8 +40,16 @@
 /**************************************************************************/
 class ZephyrFlowRateSensor
 {
+  private:
+    const uint8_t _ADDR;      ///< slave select pin (active low)
+    const float _FLOW_RANGE;  ///< sensor flow rate range
+    uint8_t _buf[2];          ///< buffer to hold sensor data
+    int _count = 0;           ///< hold raw flow rate data (14- bits, 0 - 16384)
+    SensorType _type;         ///< the sensor type is used to select the algorithm to convert counts to flow rate
+
   public:
     /// An enumerator to define the type of HAF sensor
+    uint32_t SerialNo;	   ///< Sensor serial number	
     enum SensorType : uint8_t {
         SCCM = 0, ///< sensor reports values in SCCM
         SLPM = 1 ///< sensor reports values in SLPM
@@ -68,14 +76,16 @@ class ZephyrFlowRateSensor
             can be used.
     */
     /**************************************************************************/
-    void begin()
+    bool begin()
     {
         delay(17); // start-up time
         // power up sequence: first two reads are serial number
-        readSensor(); // two MSB of Sensor
-        
+        if (readSensor()==-1) return false;
+        SerialNo = _count<<16;
         delay(10);
-        readSensor(); // 2 LSB of SN
+        if (readSensor()==-1) return false; // 2 LSB of SN
+        SerialNo += _count; 
+        return true;
     }
 
     /**************************************************************************/
@@ -136,12 +146,6 @@ class ZephyrFlowRateSensor
     float flow() const { return _type == SCCM ? 
                                 _FLOW_RANGE * ( ( (float)_count/16384.0) - 0.5) * 2.5 :
                                 _FLOW_RANGE * ( ( (float)_count/16384.0) - 0.1) * 1.25; }
-  private:
-    const uint8_t _ADDR;      ///< slave select pin (active low)
-    const float _FLOW_RANGE;  ///< sensor flow rate range
-    uint8_t _buf[2];          ///< buffer to hold sensor data
-    int _count = 0;           ///< hold raw flow rate data (14- bits, 0 - 16384)
-    SensorType _type;         ///< the sensor type is used to select the algorithm to convert counts to flow rate
 };
 
 #endif // End __HONEYWELL_ZEPHYR_I2C_H__ include guard
