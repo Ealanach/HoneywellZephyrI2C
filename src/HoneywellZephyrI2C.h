@@ -3,6 +3,8 @@
 
 #include <Wire.h>
 
+#define DATALEN_CMD 1
+
 /*!
  * @file HoneywellZephyrI2C.h
  *
@@ -53,6 +55,7 @@ class ZephyrFlowRateSensor
     uint8_t _buf[2];          ///< buffer to hold sensor data
     int _count = 0;           ///< hold raw flow rate data (14- bits, 0 - 16384)
     SensorType _type;         ///< the sensor type is used to select the algorithm to convert counts to flow rate
+    int8_t status;
 
   public:  
     uint32_t SerialNo;	   ///< Sensor serial number	
@@ -70,9 +73,18 @@ class ZephyrFlowRateSensor
     ZephyrFlowRateSensor(const uint8_t address, const float range, const SensorType type = SCCM)
         : _ADDR(address), _FLOW_RANGE(range), _type(type) {}
 
-    /**************************************************************************/
+   bool i2cSend(const uint8_t* cmd, uint8_t len=DATALEN_CMD)
+{
+    bool ret = true;
+    Wire.beginTransmission(_ADDR);
+    ret = (Wire.write(cmd,len) == len) && (Wire.endTransmission(true) == 0);  //set false works in AVR devices
+    return ret;
+}
+
+
+ /**************************************************************************/
     /*!
-    @brief  Initializes a pressure sensor object.
+    @brief  Initializes a flow sensor object.
             This function must be called in the Arduino setup() function.
             Wire.begin() must be called seperately in setup() before the sensor
             can be used.
@@ -80,13 +92,16 @@ class ZephyrFlowRateSensor
     /**************************************************************************/
     bool begin()
     {
-        delay(17); // start-up time
-        // power up sequence: first two reads are serial number
-        if (readSensor()==-1) return false;
-        SerialNo = _count<<16;
+        delay(20); // start-up time
+        byte cmd[1]={0x01}; //send serial command
+        if (!i2cSend(cmd)) return false;
+        delay(10); 
+        //next two reads are serial number
+        if (readSensor()==1) return false;
+        uint32_t S1 = _count;
         delay(10);
-        if (readSensor()==-1) return false; // 2 LSB of SN
-        SerialNo += _count; 
+        if (readSensor()==1) return false; // 2 LSB of SN
+        SerialNo = (S1<<16) + _count;
         return true;
     }
 
