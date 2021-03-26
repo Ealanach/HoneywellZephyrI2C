@@ -3,7 +3,7 @@
 
 #include <Wire.h>
 
-#define DATALEN_CMD 1
+#define LEN_CMD 1
 
 /*!
  * @file HoneywellZephyrI2C.h
@@ -73,7 +73,7 @@ class ZephyrFlowRateSensor
     ZephyrFlowRateSensor(const uint8_t address, const float range, const SensorType type = SCCM)
         : _ADDR(address), _FLOW_RANGE(range), _type(type) {}
 
-   bool i2cSend(const uint8_t* cmd, uint8_t len=DATALEN_CMD)
+   bool i2cSend(const uint8_t* cmd, uint8_t len=LEN_CMD)
 {
     bool ret = true;
     Wire.beginTransmission(_ADDR);
