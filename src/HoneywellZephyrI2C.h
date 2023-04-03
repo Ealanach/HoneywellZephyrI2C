@@ -41,11 +41,6 @@ enum SensorType : uint8_t {
     SLPM = 1 ///< sensor reports values in SLPM
 };
 
-enum wireDevice_t{
-    w0,
-    w1
-};
-
 /**************************************************************************/
 /*! 
     @brief  Class for reading flow rate from a Honeywell Zephyr HAF sensor
@@ -61,7 +56,6 @@ class ZephyrFlowRateSensor
     int _count = 0;           ///< hold raw flow rate data (14- bits, 0 - 16384)
     SensorType _type;         ///< the sensor type is used to select the algorithm to convert counts to flow rate
     int8_t status;
-    wireDevice_t _wireDev;
     TwoWire* W;
     
 
@@ -80,8 +74,8 @@ class ZephyrFlowRateSensor
               the Wire interface to use              
     */
     /**************************************************************************/
-    ZephyrFlowRateSensor(const uint8_t address, const float range, const SensorType type = SCCM, const wireDevice_t wireDev = w0)
-        : _ADDR(address), _FLOW_RANGE(range), _type(type), _wireDev(wireDev)  {}
+    ZephyrFlowRateSensor(const uint8_t address, const float range, const SensorType type = SCCM,  TwoWire* wireDev = &Wire)
+        : _ADDR(address), _FLOW_RANGE(range), _type(type), W(wireDev)  {}
 
    bool i2cSend(const uint8_t* cmd, uint8_t len=LEN_CMD)
 {
@@ -102,13 +96,6 @@ class ZephyrFlowRateSensor
     /**************************************************************************/
     bool begin()
     {
-        switch (_wireDev) {
-            case w0: W = &Wire;
-                    break;
-            case w1: W = &Wire1;
-                    break;
-            default: return false;                
-        } 
         delay(20); // start-up time
         byte cmd[1]={0x01}; //send serial command
         if (!i2cSend(cmd)) return false;
