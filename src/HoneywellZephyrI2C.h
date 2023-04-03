@@ -41,6 +41,11 @@ enum SensorType : uint8_t {
     SLPM = 1 ///< sensor reports values in SLPM
 };
 
+enum wireDevice_t{
+    0,
+    1
+};
+
 /**************************************************************************/
 /*! 
     @brief  Class for reading flow rate from a Honeywell Zephyr HAF sensor
@@ -56,6 +61,9 @@ class ZephyrFlowRateSensor
     int _count = 0;           ///< hold raw flow rate data (14- bits, 0 - 16384)
     SensorType _type;         ///< the sensor type is used to select the algorithm to convert counts to flow rate
     int8_t status;
+    wireDevice_t _wireDevice;
+    I2C: TwoWire;
+    
 
   public:  
     uint32_t SerialNo;	   ///< Sensor serial number	
@@ -70,8 +78,8 @@ class ZephyrFlowRateSensor
               the type of sensor (SCCM or SLPM)
     */
     /**************************************************************************/
-    ZephyrFlowRateSensor(const uint8_t address, const float range, const SensorType type = SCCM)
-        : _ADDR(address), _FLOW_RANGE(range), _type(type) {}
+    ZephyrFlowRateSensor(const uint8_t address, const float range, const SensorType type = SCCM), const wireDevice = 0)
+        : _ADDR(address), _FLOW_RANGE(range), _type(type). _wireDevice(wireDevice)  {}
 
    bool i2cSend(const uint8_t* cmd, uint8_t len=LEN_CMD)
 {
@@ -92,6 +100,13 @@ class ZephyrFlowRateSensor
     /**************************************************************************/
     bool begin()
     {
+        switch (_wireDevice) {
+            case 0: I2C = Wire;
+                    break;
+            case 1: I2C = Wire1;
+                    break;
+            default: return false;                
+        } 
         delay(20); // start-up time
         byte cmd[1]={0x01}; //send serial command
         if (!i2cSend(cmd)) return false;
@@ -115,11 +130,11 @@ class ZephyrFlowRateSensor
     /**************************************************************************/
     uint8_t readSensor()
     {
-        Wire.requestFrom(_ADDR, (uint8_t)2);
+        I2C.requestFrom(_ADDR, (uint8_t)2);
 
         uint8_t idx = 0;
-        while ( Wire.available() && idx < 2 ) {
-            _buf[idx] = Wire.read();
+        while ( I2C.available() && idx < 2 ) {
+            _buf[idx] = I2C.read();
             ++idx;
         }
         // data is MSB, LSB. First two bits always 00
