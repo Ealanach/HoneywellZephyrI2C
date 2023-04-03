@@ -42,8 +42,8 @@ enum SensorType : uint8_t {
 };
 
 enum wireDevice_t{
-    0,
-    1
+    w0,
+    w1
 };
 
 /**************************************************************************/
@@ -61,8 +61,8 @@ class ZephyrFlowRateSensor
     int _count = 0;           ///< hold raw flow rate data (14- bits, 0 - 16384)
     SensorType _type;         ///< the sensor type is used to select the algorithm to convert counts to flow rate
     int8_t status;
-    wireDevice_t _wireDevice;
-    I2C: TwoWire;
+    wireDevice_t _wireDev;
+    TwoWire* W;
     
 
   public:  
@@ -76,16 +76,18 @@ class ZephyrFlowRateSensor
               the flow rate range of the sensor
     @param    type
               the type of sensor (SCCM or SLPM)
+    @param    wireDev
+              the Wire interface to use              
     */
     /**************************************************************************/
-    ZephyrFlowRateSensor(const uint8_t address, const float range, const SensorType type = SCCM), const wireDevice = 0)
-        : _ADDR(address), _FLOW_RANGE(range), _type(type). _wireDevice(wireDevice)  {}
+    ZephyrFlowRateSensor(const uint8_t address, const float range, const SensorType type = SCCM, const wireDevice_t wireDev = w0)
+        : _ADDR(address), _FLOW_RANGE(range), _type(type), _wireDev(wireDev)  {}
 
    bool i2cSend(const uint8_t* cmd, uint8_t len=LEN_CMD)
 {
     bool ret = true;
-    Wire.beginTransmission(_ADDR);
-    ret = (Wire.write(cmd,len) == len) && (Wire.endTransmission(true) == 0);  //set false works in AVR devices
+    W->beginTransmission(_ADDR);
+    ret = (W->write(cmd,len) == len) && (W->endTransmission(true) == 0);  //set false works in AVR devices
     return ret;
 }
 
@@ -100,10 +102,10 @@ class ZephyrFlowRateSensor
     /**************************************************************************/
     bool begin()
     {
-        switch (_wireDevice) {
-            case 0: I2C = Wire;
+        switch (_wireDev) {
+            case w0: W = &Wire;
                     break;
-            case 1: I2C = Wire1;
+            case w1: W = &Wire1;
                     break;
             default: return false;                
         } 
@@ -130,11 +132,11 @@ class ZephyrFlowRateSensor
     /**************************************************************************/
     uint8_t readSensor()
     {
-        I2C.requestFrom(_ADDR, (uint8_t)2);
+        W->requestFrom(_ADDR, (uint8_t)2);
 
         uint8_t idx = 0;
-        while ( I2C.available() && idx < 2 ) {
-            _buf[idx] = I2C.read();
+        while ( W->available() && idx < 2 ) {
+            _buf[idx] = W->read();
             ++idx;
         }
         // data is MSB, LSB. First two bits always 00
