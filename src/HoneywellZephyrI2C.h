@@ -36,7 +36,7 @@
  */
 
 /// An enumerator to define the type of HAF sensor
-enum SensorType : uint8_t {
+enum class SensorType : uint8_t {
     SCCM = 0, ///< sensor reports values in SCCM
     SLPM = 1 ///< sensor reports values in SLPM
 };
@@ -74,7 +74,7 @@ class ZephyrFlowRateSensor
               the Wire interface to use              
     */
     /**************************************************************************/
-    ZephyrFlowRateSensor(const uint8_t address, const float range, const SensorType type = SCCM,  TwoWire* wireDev = &Wire)
+    ZephyrFlowRateSensor(const uint8_t address, const float range, const SensorType type = SensorType::SCCM,  TwoWire* wireDev = &Wire)
         : _ADDR(address), _FLOW_RANGE(range), _type(type), W(wireDev)  {}
 
    bool i2cSend(const uint8_t* cmd, uint8_t len=LEN_CMD)
@@ -97,7 +97,7 @@ class ZephyrFlowRateSensor
     bool begin()
     {
         delay(20); // start-up time
-        byte cmd[1]={0x01}; //send serial command
+        uint8_t cmd[1]={0x01}; //send serial command
         if (!i2cSend(cmd)) return false;
         delay(10); 
         //next two reads are serial number
@@ -164,7 +164,7 @@ class ZephyrFlowRateSensor
     @return  The flow rate value from the most recent reading in the units of the sensor (SCCM or SLPM)
     */
     /**************************************************************************/
-    float flow() const { return _type == SCCM ? 
+    float flow() const { return _type == SensorType::SCCM ? 
                                 _FLOW_RANGE * ( ( (float)_count/16384.0) - 0.5) * 2.5 :
                                 _FLOW_RANGE * ( ( (float)_count/16384.0) - 0.1) * 1.25; }
 };
